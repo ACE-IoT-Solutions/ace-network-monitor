@@ -1,0 +1,30 @@
+[project]
+name = "ace-connection-logger"
+version = "0.1.0"
+description = "Network connectivity monitoring tool with ping statistics and dashboard"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.3.0",
+    "streamlit>=1.39.0",
+    "plotly>=5.24.0",
+    "pandas>=2.2.0",
+    "pyyaml>=6.0.2",
+    "schedule>=1.2.2",
+]
+
+[project.scripts]
+ace-connection-logger = "main:main"
+
+[dependency-groups]
+dev = [
+    "pyrefly>=0.40.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "pytest-timeout>=2.2.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-xdist>=3.5.0",
+    "coverage[toml]>=7.4.0",
+    "ruff>=0.14.3",
+]

@@ -1,0 +1,17 @@
+monitoring:
+  interval_seconds: 60
+  ping_count: 5
+  timeout_seconds: 2
+hosts:
+- name: Google DNS
+  address: 8.8.8.8
+- name: Cloudflare DNS
+  address: 1.1.1.1
+- name: Local Gateway
+  address: 192.168.1.1
+database:
+  path: connection_logs.db
+  retention_days: 90
+dashboard:
+  port: 8501
+  host: localhost
