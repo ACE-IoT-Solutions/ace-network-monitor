@@ -25,13 +25,70 @@ def cli():
     type=click.Path(),
     help="Path to configuration file",
 )
-def monitor(config):
-    """Start continuous monitoring of configured hosts."""
+@click.option(
+    "--dashboard/--no-dashboard",
+    default=True,
+    help="Launch dashboard alongside monitoring (default: enabled)",
+)
+@click.option(
+    "--dashboard-port",
+    type=int,
+    help="Port to run dashboard on (overrides config)",
+)
+@click.option(
+    "--dashboard-host",
+    type=str,
+    help="Host to run dashboard on (overrides config)",
+)
+def monitor(config, dashboard, dashboard_port, dashboard_host):
+    """Start continuous monitoring of configured hosts.
+
+    By default, launches the dashboard alongside monitoring in an integrated mode.
+    Use --no-dashboard to run monitoring only without the dashboard.
+    """
+    import threading
+    import time
+
     cfg = Config(config)
     db = Database(cfg.database_path)
     mon = PingMonitor(cfg, db)
 
-    mon.run_continuous()
+    if dashboard:
+        # Start monitoring in background thread
+        monitor_thread = threading.Thread(
+            target=mon.run_continuous,
+            daemon=True,
+            name="MonitorThread"
+        )
+        monitor_thread.start()
+
+        # Give monitoring a moment to start and do initial check
+        time.sleep(2)
+
+        # Launch dashboard in main thread (Streamlit expects this)
+        dashboard_port_val = dashboard_port if dashboard_port else cfg.dashboard_port
+        dashboard_host_val = dashboard_host if dashboard_host else cfg.dashboard_host
+
+        cmd = [
+            "streamlit",
+            "run",
+            "dashboard.py",
+            "--server.port",
+            str(dashboard_port_val),
+            "--server.address",
+            dashboard_host_val,
+        ]
+
+        click.echo(f"Starting integrated monitoring + dashboard on {dashboard_host_val}:{dashboard_port_val}...")
+        click.echo("Press Ctrl+C to stop both monitoring and dashboard")
+
+        try:
+            subprocess.run(cmd)
+        except KeyboardInterrupt:
+            click.echo("\nMonitoring and dashboard stopped")
+    else:
+        # Run monitoring only (original behavior)
+        mon.run_continuous()
 
 
 @cli.command()

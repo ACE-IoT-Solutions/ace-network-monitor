@@ -51,12 +51,18 @@ source .venv/bin/activate  # On Unix/macOS
        address: 192.168.1.1
    ```
 
-3. **Start Monitoring**:
+3. **Start Monitoring with Dashboard**:
    ```bash
    python main.py monitor
    ```
+   This automatically:
+   - Starts continuous monitoring in the background
+   - Launches the interactive dashboard
+   - Opens your browser to http://localhost:8501
 
-4. **Launch Dashboard** (in a separate terminal):
+   Press Ctrl+C to stop both monitoring and dashboard.
+
+4. **Alternative: Separate Commands** (if needed):
    ```bash
    python main.py dashboard
    ```
@@ -72,11 +78,22 @@ python main.py init-config --config /path/to/config.yaml
 ```
 
 ### `monitor`
-Start continuous monitoring (runs indefinitely):
+Start continuous monitoring with integrated dashboard (recommended):
 ```bash
+# Default: Monitoring + Dashboard together
 python main.py monitor
+
+# Custom dashboard port
+python main.py monitor --dashboard-port 8080
+
+# Monitoring only, no dashboard
+python main.py monitor --no-dashboard
+
+# Custom config
 python main.py monitor --config /path/to/config.yaml
 ```
+
+**Note:** By default, `monitor` now launches both the monitoring engine and the dashboard in one command. The monitoring runs in the background while the dashboard is displayed. Press Ctrl+C to stop both.
 
 ### `check`
 Perform a single check of all hosts:
@@ -93,12 +110,15 @@ python main.py status --config /path/to/config.yaml
 ```
 
 ### `dashboard`
-Launch the interactive Streamlit dashboard:
+Launch the interactive Streamlit dashboard standalone:
 ```bash
+# Standalone dashboard (no monitoring)
 python main.py dashboard
 python main.py dashboard --port 8080
 python main.py dashboard --host 0.0.0.0 --port 8080
 ```
+
+**Note:** You typically want to use `monitor` (which includes the dashboard) instead of running `dashboard` separately.
 
 ### `cleanup`
 Run cleanup job once to remove old records:

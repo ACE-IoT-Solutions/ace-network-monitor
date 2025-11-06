@@ -18,3 +18,7 @@ config.local.yaml
 
 # Streamlit cache
 .streamlit/
+
+# Tool directories
+.claude-flow/
+.hive-mind/
