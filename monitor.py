@@ -5,6 +5,7 @@ import re
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional, List
 
 from config import Config
 from database import Database, PingResult
@@ -16,9 +17,9 @@ class PingStats:
 
     success_count: int
     failure_count: int
-    min_latency: float | None
-    max_latency: float | None
-    avg_latency: float | None
+    min_latency: Optional[float]
+    max_latency: Optional[float]
+    avg_latency: Optional[float]
 
     @property
     def success_rate(self) -> float:
@@ -250,7 +251,7 @@ class PingMonitor:
 
         return result
 
-    def check_all_hosts(self) -> list[PingResult]:
+    def check_all_hosts(self) -> List[PingResult]:
         """Check all configured hosts and track outage events.
 
         Returns:

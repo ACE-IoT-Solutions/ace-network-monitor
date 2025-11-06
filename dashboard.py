@@ -1,6 +1,7 @@
 """Streamlit dashboard for visualizing network connectivity monitoring data."""
 
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pandas as pd
 import plotly.express as px
@@ -33,7 +34,7 @@ def create_status_indicator(success_rate: float) -> str:
     return f'<span style="color: {color}; font-weight: bold;">{status}</span>'
 
 
-def format_latency(latency: float | None) -> str:
+def format_latency(latency: Optional[float]) -> str:
     """Format latency value for display.
 
     Args:

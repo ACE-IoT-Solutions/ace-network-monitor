@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -32,7 +32,7 @@ DEFAULT_CONFIG = {
 class Config:
     """Configuration manager for the application."""
 
-    def __init__(self, config_path: str | None = None):
+    def __init__(self, config_path: Optional[str] = None):
         """Initialize configuration.
 
         Args:

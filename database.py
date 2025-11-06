@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional, Union, List
 
 
 @dataclass
@@ -18,26 +18,26 @@ class PingResult:
     success_count: int
     failure_count: int
     success_rate: float
-    min_latency: float | None
-    max_latency: float | None
-    avg_latency: float | None
+    min_latency: Optional[float]
+    max_latency: Optional[float]
+    avg_latency: Optional[float]
 
 
 @dataclass
 class OutageEvent:
     """Represents an outage/recovery event for a host."""
 
-    id: int | None
+    id: Optional[int]
     host_name: str
     host_address: str
     event_type: str  # 'outage_start', 'outage_end', 'degraded'
     start_time: datetime
-    end_time: datetime | None
-    duration_seconds: int | None
+    end_time: Optional[datetime]
+    duration_seconds: Optional[int]
     checks_failed: int
     checks_during_outage: int
-    recovery_success_rate: float | None
-    notes: str | None
+    recovery_success_rate: Optional[float]
+    notes: Optional[str]
 
 
 class Database:
@@ -173,11 +173,11 @@ class Database:
 
     def get_results(
         self,
-        host_address: str | None = None,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
-        limit: int | None = None,
-    ) -> list[PingResult]:
+        host_address: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        limit: Optional[int] = None,
+    ) -> List[PingResult]:
         """Retrieve ping results from the database.
 
         Args:
@@ -190,7 +190,7 @@ class Database:
             List of PingResult objects.
         """
         query = "SELECT * FROM ping_results WHERE 1=1"
-        params: list[str | datetime | int] = []
+        params: List[Union[str, datetime, int]] = []
 
         if host_address:
             query += " AND host_address = ?"
@@ -230,7 +230,7 @@ class Database:
             for row in rows
         ]
 
-    def get_latest_results(self) -> list[PingResult]:
+    def get_latest_results(self) -> List[PingResult]:
         """Get the most recent result for each host.
 
         Returns:
@@ -272,9 +272,9 @@ class Database:
     def get_statistics(
         self,
         host_address: str,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
-    ) -> dict[str, float]:
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> dict:
         """Calculate aggregate statistics for a host.
 
         Args:
@@ -297,7 +297,7 @@ class Database:
             FROM ping_results
             WHERE host_address = ?
         """
-        params: list[str | datetime] = [host_address]
+        params: List[Union[str, datetime]] = [host_address]
 
         if start_time:
             query += " AND timestamp >= ?"
@@ -354,7 +354,7 @@ class Database:
 
         return deleted_count
 
-    def get_host_addresses(self) -> list[str]:
+    def get_host_addresses(self) -> List[str]:
         """Get list of all unique host addresses in the database.
 
         Returns:
@@ -369,7 +369,7 @@ class Database:
 
         return [row["host_address"] for row in rows]
 
-    def get_active_outage(self, host_address: str) -> OutageEvent | None:
+    def get_active_outage(self, host_address: str) -> Optional[OutageEvent]:
         """Get the current active outage for a host (if any).
 
         Args:
@@ -409,7 +409,7 @@ class Database:
         return None
 
     def create_outage_event(
-        self, host_name: str, host_address: str, start_time: datetime, notes: str | None = None
+        self, host_name: str, host_address: str, start_time: datetime, notes: Optional[str] = None
     ) -> int:
         """Create a new outage event.
 
@@ -437,8 +437,8 @@ class Database:
     def update_outage_event(
         self,
         event_id: int,
-        checks_failed: int | None = None,
-        checks_during_outage: int | None = None,
+        checks_failed: Optional[int] = None,
+        checks_during_outage: Optional[int] = None,
     ) -> None:
         """Update an ongoing outage event with new check data.
 
@@ -472,7 +472,7 @@ class Database:
         event_id: int,
         end_time: datetime,
         recovery_success_rate: float,
-        notes: str | None = None,
+        notes: Optional[str] = None,
     ) -> None:
         """Close an outage event when the host recovers.
 
@@ -516,12 +516,12 @@ class Database:
 
     def get_outage_events(
         self,
-        host_address: str | None = None,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
+        host_address: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
         active_only: bool = False,
-        limit: int | None = None,
-    ) -> list[OutageEvent]:
+        limit: Optional[int] = None,
+    ) -> List[OutageEvent]:
         """Retrieve outage events from the database.
 
         Args:
@@ -535,7 +535,7 @@ class Database:
             List of OutageEvent objects.
         """
         query = "SELECT * FROM outage_events WHERE 1=1"
-        params: list[str | datetime | int] = []
+        params: List[Union[str, datetime, int]] = []
 
         if host_address:
             query += " AND host_address = ?"
@@ -583,9 +583,9 @@ class Database:
     def get_outage_statistics(
         self,
         host_address: str,
-        start_time: datetime | None = None,
-        end_time: datetime | None = None,
-    ) -> dict[str, int | float]:
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> dict:
         """Calculate outage statistics for a host.
 
         Args:
@@ -607,7 +607,7 @@ class Database:
             WHERE host_address = ?
             AND end_time IS NOT NULL
         """
-        params: list[str | datetime] = [host_address]
+        params: List[Union[str, datetime]] = [host_address]
 
         if start_time:
             query += " AND start_time >= ?"
