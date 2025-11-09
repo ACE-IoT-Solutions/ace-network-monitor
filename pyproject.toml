@@ -1,9 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "ace-connection-logger"
 version = "0.2.0"
 description = "Network connectivity monitoring tool with ping statistics, outage tracking, FastAPI backend and Vue.js dashboard"
 readme = "README.md"
 requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "ACE IoT Solutions", email = "info@aceiotsolutions.com"}
+]
+keywords = ["networking", "monitoring", "ping", "latency", "dashboard", "fastapi", "vue"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking :: Monitoring",
+]
 dependencies = [
     "click>=8.0.0",
     "fastapi>=0.104.0",
@@ -12,6 +34,12 @@ dependencies = [
     "pyyaml>=6.0",
     "schedule>=1.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ACE-IoT-Solutions/ace-connection-logger"
+Repository = "https://github.com/ACE-IoT-Solutions/ace-connection-logger"
+Documentation = "https://github.com/ACE-IoT-Solutions/ace-connection-logger#readme"
+Issues = "https://github.com/ACE-IoT-Solutions/ace-connection-logger/issues"
 
 [project.scripts]
 ace-connection-logger = "main:main"
@@ -27,4 +55,28 @@ dev = [
     "pytest-xdist>=3.5.0",
     "coverage[toml]>=7.4.0",
     "ruff>=0.14.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+exclude = [
+    "tests",
+    "frontend",
+    ".github",
+    ".git",
+    ".venv",
+    "*.db",
+    "*.md",
+    "run_example.py",
+    "test_*.py",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "tests",
+    ".github",
+    ".git",
+    ".venv",
+    "*.db",
+    "data",
 ]
