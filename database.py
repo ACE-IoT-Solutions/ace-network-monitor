@@ -409,7 +409,11 @@ class Database:
         return None
 
     def create_outage_event(
-        self, host_name: str, host_address: str, start_time: datetime, notes: Optional[str] = None
+        self,
+        host_name: str,
+        host_address: str,
+        start_time: datetime,
+        notes: Optional[str] = None,
     ) -> int:
         """Create a new outage event.
 
@@ -497,7 +501,9 @@ class Database:
                 # Combine existing notes with new notes if provided
                 existing_notes = row["notes"]
                 if notes:
-                    combined_notes = f"{existing_notes}\n{notes}" if existing_notes else notes
+                    combined_notes = (
+                        f"{existing_notes}\n{notes}" if existing_notes else notes
+                    )
                 else:
                     combined_notes = existing_notes
 
@@ -511,7 +517,13 @@ class Database:
                         notes = ?
                     WHERE id = ?
                     """,
-                    (end_time, duration, recovery_success_rate, combined_notes, event_id),
+                    (
+                        end_time,
+                        duration,
+                        recovery_success_rate,
+                        combined_notes,
+                        event_id,
+                    ),
                 )
 
     def get_outage_events(
@@ -570,7 +582,9 @@ class Database:
                 host_address=row["host_address"],
                 event_type=row["event_type"],
                 start_time=datetime.fromisoformat(row["start_time"]),
-                end_time=datetime.fromisoformat(row["end_time"]) if row["end_time"] else None,
+                end_time=datetime.fromisoformat(row["end_time"])
+                if row["end_time"]
+                else None,
                 duration_seconds=row["duration_seconds"],
                 checks_failed=row["checks_failed"],
                 checks_during_outage=row["checks_during_outage"],

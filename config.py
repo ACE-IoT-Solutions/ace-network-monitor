@@ -39,9 +39,7 @@ class Config:
             config_path: Path to configuration file. If None, uses default location.
         """
         if config_path is None:
-            config_path = os.path.join(
-                os.path.dirname(__file__), "config.yaml"
-            )
+            config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
 
         self.config_path = Path(config_path)
         self._config = self._load_config()

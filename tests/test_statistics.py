@@ -42,14 +42,17 @@ class TestStatisticsCalculations:
         success_rate = (success_count / total_count) * 100
         assert success_rate == 70.0
 
-    @pytest.mark.parametrize("success,total,expected", [
-        (10, 10, 100.0),
-        (5, 10, 50.0),
-        (3, 10, 30.0),
-        (0, 10, 0.0),
-        (1, 100, 1.0),
-        (99, 100, 99.0),
-    ])
+    @pytest.mark.parametrize(
+        "success,total,expected",
+        [
+            (10, 10, 100.0),
+            (5, 10, 50.0),
+            (3, 10, 30.0),
+            (0, 10, 0.0),
+            (1, 100, 1.0),
+            (99, 100, 99.0),
+        ],
+    )
     def test_success_rate_various_scenarios(self, success, total, expected):
         """Test success rate calculation with various inputs."""
         calculated = (success / total) * 100
@@ -140,13 +143,16 @@ class TestStatisticsCalculations:
         start_time = datetime.now() - timedelta(hours=1)
         end_time = datetime.now()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 COUNT(*) as ping_count,
                 AVG(success_rate) as avg_success_rate
             FROM ping_results
             WHERE timestamp BETWEEN ? AND ?
-        """, (start_time, end_time))
+        """,
+            (start_time, end_time),
+        )
 
         result = cursor.fetchone()
         assert result is not None
@@ -247,24 +253,30 @@ class TestStatisticsCalculations:
         cursor = populated_db.cursor()
 
         # Insert record with NULL latencies (failed ping)
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("failed.host", datetime.now(), 10, 0, 10, 0.0, None, None, None))
+        """,
+            ("failed.host", datetime.now(), 10, 0, 10, 0.0, None, None, None),
+        )
 
         populated_db.commit()
 
         # Query should exclude NULL values in averages
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 AVG(avg_latency) as avg_latency,
                 COUNT(avg_latency) as latency_count,
                 COUNT(*) as total_count
             FROM ping_results
             WHERE host = ?
-        """, ("failed.host",))
+        """,
+            ("failed.host",),
+        )
 
         result = cursor.fetchone()
         assert result[1] == 0  # No latency values
@@ -277,7 +289,7 @@ class TestStatisticsCalculations:
 
         moving_averages = []
         for i in range(len(latencies) - window_size + 1):
-            window = latencies[i:i + window_size]
+            window = latencies[i : i + window_size]
             moving_averages.append(sum(window) / window_size)
 
         assert len(moving_averages) == len(latencies) - window_size + 1
@@ -289,7 +301,7 @@ class TestStatisticsCalculations:
 
         mean = sum(latencies) / len(latencies)
         variance = sum((x - mean) ** 2 for x in latencies) / len(latencies)
-        std_dev = variance ** 0.5
+        std_dev = variance**0.5
 
         assert std_dev > 0
 
@@ -298,8 +310,9 @@ class TestStatisticsCalculations:
         latencies = [10.0, 12.0, 11.0, 15.0, 9.0]
 
         # Simple jitter: difference between consecutive measurements
-        jitters = [abs(latencies[i] - latencies[i-1])
-                   for i in range(1, len(latencies))]
+        jitters = [
+            abs(latencies[i] - latencies[i - 1]) for i in range(1, len(latencies))
+        ]
 
         avg_jitter = sum(jitters) / len(jitters)
         assert avg_jitter >= 0
@@ -309,7 +322,9 @@ class TestStatisticsCalculations:
         total_time_minutes = 1440  # 24 hours
         downtime_minutes = 20
 
-        availability = ((total_time_minutes - downtime_minutes) / total_time_minutes) * 100
+        availability = (
+            (total_time_minutes - downtime_minutes) / total_time_minutes
+        ) * 100
         assert availability > 98.0
 
     @pytest.mark.parametrize("window_minutes", [5, 15, 60, 1440])
@@ -319,13 +334,16 @@ class TestStatisticsCalculations:
 
         cutoff_time = datetime.now() - timedelta(minutes=window_minutes)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 COUNT(*) as ping_count,
                 AVG(success_rate) as avg_success_rate
             FROM ping_results
             WHERE timestamp >= ?
-        """, (cutoff_time,))
+        """,
+            (cutoff_time,),
+        )
 
         result = cursor.fetchone()
         assert result is not None
@@ -376,8 +394,12 @@ class TestStatisticsCalculations:
 
         # Simple trend: compare first half vs second half
         midpoint = len(latencies_over_time) // 2
-        first_half_avg = sum(lat for lat, _ in latencies_over_time[:midpoint]) / midpoint
-        second_half_avg = sum(lat for lat, _ in latencies_over_time[midpoint:]) / (len(latencies_over_time) - midpoint)
+        first_half_avg = (
+            sum(lat for lat, _ in latencies_over_time[:midpoint]) / midpoint
+        )
+        second_half_avg = sum(lat for lat, _ in latencies_over_time[midpoint:]) / (
+            len(latencies_over_time) - midpoint
+        )
 
         # Trend is degrading if second half is worse
         is_degrading = second_half_avg > first_half_avg

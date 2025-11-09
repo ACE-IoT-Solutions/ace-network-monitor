@@ -5,7 +5,7 @@ from datetime import datetime
 
 from config import Config
 from database import Database, PingResult
-from monitor import PingMonitor, PingStats
+from monitor import PingStats
 
 
 def test_ping_stats_success_rate():

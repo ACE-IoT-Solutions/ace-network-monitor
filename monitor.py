@@ -48,9 +48,7 @@ class PingMonitor:
         self.database = database
         self.is_windows = platform.system().lower() == "windows"
 
-    def ping_host(
-        self, host_address: str, count: int, timeout: int
-    ) -> PingStats:
+    def ping_host(self, host_address: str, count: int, timeout: int) -> PingStats:
         """Ping a host and collect statistics.
 
         Args:
@@ -153,7 +151,8 @@ class PingMonitor:
             # Parse Unix ping output
             # Try to extract packet loss statistics first
             loss_pattern = re.compile(
-                r"(\d+) packets transmitted, (\d+)(?:\s+packets)?\s+received", re.IGNORECASE
+                r"(\d+) packets transmitted, (\d+)(?:\s+packets)?\s+received",
+                re.IGNORECASE,
             )
             loss_match = loss_pattern.search(output)
             if loss_match:
@@ -166,7 +165,7 @@ class PingMonitor:
             # macOS format: round-trip min/avg/max/stddev = 7.270/8.087/8.904/0.817 ms
             mac_stats_pattern = re.compile(
                 r"round-trip\s+min/avg/max/stddev\s*=\s*(\d+\.?\d*)/(\d+\.?\d*)/(\d+\.?\d*)",
-                re.IGNORECASE
+                re.IGNORECASE,
             )
             mac_match = mac_stats_pattern.search(output)
             if mac_match:
@@ -309,7 +308,9 @@ class PingMonitor:
                     checks_failed=active_outage.checks_failed,
                     checks_during_outage=active_outage.checks_during_outage,
                 )
-                print(f"  ⚠️  Outage continues ({active_outage.checks_failed} failed checks)")
+                print(
+                    f"  ⚠️  Outage continues ({active_outage.checks_failed} failed checks)"
+                )
             else:
                 # New outage detected
                 event_id = self.database.create_outage_event(
@@ -340,7 +341,9 @@ class PingMonitor:
                 else:
                     duration_str = f"{seconds}s"
 
-                print(f"  🟢 RECOVERED from outage (Duration: {duration_str}, {active_outage.checks_failed} failed checks)")
+                print(
+                    f"  🟢 RECOVERED from outage (Duration: {duration_str}, {active_outage.checks_failed} failed checks)"
+                )
             # else: Host is up and no active outage - normal operation
 
     def run_continuous(self) -> None:
@@ -353,9 +356,7 @@ class PingMonitor:
         import time
 
         # Schedule the monitoring job
-        schedule.every(self.config.monitoring_interval).seconds.do(
-            self.check_all_hosts
-        )
+        schedule.every(self.config.monitoring_interval).seconds.do(self.check_all_hosts)
 
         print(
             f"Starting continuous monitoring (interval: {self.config.monitoring_interval}s)"

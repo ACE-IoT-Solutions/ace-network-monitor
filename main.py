@@ -1,7 +1,5 @@
 """Network connectivity monitoring tool with ping statistics and dashboard."""
 
-import subprocess
-import sys
 import threading
 import time
 
@@ -52,7 +50,6 @@ def monitor(config, dashboard, api_port, api_host):
     If frontend/dist/ exists (built with 'npm run build'), the dashboard is served at the root.
     Otherwise, run 'cd frontend && npm run dev' in a separate terminal for development.
     """
-    import os
     from pathlib import Path
 
     cfg = Config(config)
@@ -62,9 +59,7 @@ def monitor(config, dashboard, api_port, api_host):
     if dashboard:
         # Start monitoring in background thread
         monitor_thread = threading.Thread(
-            target=mon.run_continuous,
-            daemon=True,
-            name="MonitorThread"
+            target=mon.run_continuous, daemon=True, name="MonitorThread"
         )
         monitor_thread.start()
 
@@ -77,10 +72,16 @@ def monitor(config, dashboard, api_port, api_host):
 
         # Check if frontend is built
         frontend_dist = Path("frontend/dist")
-        frontend_built = frontend_dist.exists() and (frontend_dist / "index.html").exists()
+        frontend_built = (
+            frontend_dist.exists() and (frontend_dist / "index.html").exists()
+        )
 
-        click.echo(f"Starting integrated monitoring + API server on {api_host_val}:{api_port_val}...")
-        click.echo(f"API documentation available at http://{api_host_val}:{api_port_val}/docs")
+        click.echo(
+            f"Starting integrated monitoring + API server on {api_host_val}:{api_port_val}..."
+        )
+        click.echo(
+            f"API documentation available at http://{api_host_val}:{api_port_val}/docs"
+        )
 
         if frontend_built:
             click.echo(f"Dashboard available at http://{api_host_val}:{api_port_val}/")
@@ -95,10 +96,7 @@ def monitor(config, dashboard, api_port, api_host):
 
         try:
             uvicorn.run(
-                "api:app",
-                host=api_host_val,
-                port=api_port_val,
-                log_level="info"
+                "api:app", host=api_host_val, port=api_port_val, log_level="info"
             )
         except KeyboardInterrupt:
             click.echo("\nMonitoring and API server stopped")
@@ -175,12 +173,7 @@ def api(config, port, host):
     click.echo("Press Ctrl+C to stop")
 
     try:
-        uvicorn.run(
-            "api:app",
-            host=api_host,
-            port=api_port,
-            log_level="info"
-        )
+        uvicorn.run("api:app", host=api_host, port=api_port, log_level="info")
     except KeyboardInterrupt:
         click.echo("\nAPI server stopped")
 
@@ -266,13 +259,19 @@ def status(config):
 
     for result in latest_results:
         status_color = (
-            "green" if result.success_rate >= 95 else "yellow" if result.success_rate >= 80 else "red"
+            "green"
+            if result.success_rate >= 95
+            else "yellow"
+            if result.success_rate >= 80
+            else "red"
         )
 
         click.echo(
             f"\n{click.style(result.host_name, bold=True)} ({result.host_address})"
         )
-        click.echo(f"  Status: {click.style('●', fg=status_color)} {result.success_rate:.1f}% success")
+        click.echo(
+            f"  Status: {click.style('●', fg=status_color)} {result.success_rate:.1f}% success"
+        )
         click.echo(
             f"  Latency: {result.avg_latency:.2f}ms (min: {result.min_latency:.2f}ms, max: {result.max_latency:.2f}ms)"
             if result.avg_latency
@@ -326,10 +325,7 @@ def events(config, host, active, limit, days):
 
     # Get outage events
     outage_events = db.get_outage_events(
-        host_address=host,
-        start_time=start_time,
-        active_only=active,
-        limit=limit
+        host_address=host, start_time=start_time, active_only=active, limit=limit
     )
 
     if not outage_events:
@@ -341,7 +337,9 @@ def events(config, host, active, limit, days):
     click.echo("=" * 100)
 
     if active:
-        click.echo(f"\n{click.style('Showing ACTIVE outages only', fg='red', bold=True)}")
+        click.echo(
+            f"\n{click.style('Showing ACTIVE outages only', fg='red', bold=True)}"
+        )
     if days:
         click.echo(f"Time range: Last {days} days")
     if host:
@@ -374,7 +372,9 @@ def events(config, host, active, limit, days):
 
         # Event header
         click.echo(f"\n{status} | Event ID: {event.id}")
-        click.echo(f"Host: {click.style(event.host_name, bold=True)} ({event.host_address})")
+        click.echo(
+            f"Host: {click.style(event.host_name, bold=True)} ({event.host_address})"
+        )
         click.echo(f"Started: {event.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
         if event.end_time:
@@ -392,7 +392,9 @@ def events(config, host, active, limit, days):
                 ongoing_str = f"{ongoing_minutes}m"
             click.echo(f"Duration: {duration_str} ({ongoing_str} so far)")
 
-        click.echo(f"Failed checks: {event.checks_failed} / {event.checks_during_outage}")
+        click.echo(
+            f"Failed checks: {event.checks_failed} / {event.checks_during_outage}"
+        )
 
         if event.notes:
             click.echo(f"Notes: {event.notes}")
@@ -411,18 +413,21 @@ def events(config, host, active, limit, days):
         stats = db.get_outage_statistics(host_addr, start_time=start_time)
 
         # Find host name
-        host_name = next((e.host_name for e in outage_events if e.host_address == host_addr), host_addr)
+        host_name = next(
+            (e.host_name for e in outage_events if e.host_address == host_addr),
+            host_addr,
+        )
 
         click.echo(f"\n{click.style(host_name, bold=True)} ({host_addr}):")
         click.echo(f"  Total outages: {stats['total_outages']}")
         click.echo(f"  Active outages: {stats['active_outages']}")
 
-        if stats['avg_duration_seconds'] > 0:
-            avg_mins = stats['avg_duration_seconds'] / 60
+        if stats["avg_duration_seconds"] > 0:
+            avg_mins = stats["avg_duration_seconds"] / 60
             click.echo(f"  Average outage duration: {avg_mins:.1f} minutes")
 
-        if stats['total_downtime_seconds'] > 0:
-            total_hours = stats['total_downtime_seconds'] / 3600
+        if stats["total_downtime_seconds"] > 0:
+            total_hours = stats["total_downtime_seconds"] / 3600
             click.echo(f"  Total downtime: {total_hours:.2f} hours")
 
     click.echo("\n" + "=" * 100)

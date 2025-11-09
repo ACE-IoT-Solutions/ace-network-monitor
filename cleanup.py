@@ -1,7 +1,5 @@
 """Cleanup job for removing old records from the database."""
 
-from datetime import datetime
-
 from config import Config
 from database import Database
 

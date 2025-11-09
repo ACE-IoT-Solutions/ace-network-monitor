@@ -1,6 +1,5 @@
 """FastAPI backend for network monitoring dashboard."""
 
-import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
@@ -11,7 +10,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from config import Config
-from database import Database, PingResult, OutageEvent
+from database import Database
 
 
 # Pydantic models for API responses
@@ -81,7 +80,7 @@ class SystemStatus(BaseModel):
 app = FastAPI(
     title="ACE Connection Logger API",
     description="Network connectivity monitoring API with outage tracking",
-    version="0.2.0"
+    version="0.2.0",
 )
 
 # CORS middleware for Vue.js frontend
@@ -118,6 +117,7 @@ def get_config() -> Config:
 
 # API Endpoints
 
+
 @app.get("/api/status")
 async def get_status() -> SystemStatus:
     """Get system status and configuration."""
@@ -126,7 +126,7 @@ async def get_status() -> SystemStatus:
         hosts=[HostInfo(name=h["name"], address=h["address"]) for h in cfg.hosts],
         total_hosts=len(cfg.hosts),
         monitoring_interval=cfg.monitoring_interval,
-        database_path=cfg.database_path
+        database_path=cfg.database_path,
     )
 
 
@@ -142,7 +142,7 @@ async def get_latest_results():
 async def get_ping_results(
     host_address: Optional[str] = None,
     hours: Optional[int] = 24,
-    limit: Optional[int] = 1000
+    limit: Optional[int] = 1000,
 ):
     """Get ping results with optional filtering."""
     database = get_db()
@@ -152,18 +152,13 @@ async def get_ping_results(
         start_time = datetime.now() - timedelta(hours=hours)
 
     results = database.get_results(
-        host_address=host_address,
-        start_time=start_time,
-        limit=limit
+        host_address=host_address, start_time=start_time, limit=limit
     )
     return [PingResultResponse.from_orm(r) for r in results]
 
 
 @app.get("/api/statistics/{host_address}", response_model=HostStatistics)
-async def get_host_statistics(
-    host_address: str,
-    hours: Optional[int] = 24
-):
+async def get_host_statistics(host_address: str, hours: Optional[int] = 24):
     """Get statistics for a specific host."""
     database = get_db()
 
@@ -180,7 +175,7 @@ async def get_outage_events(
     host_address: Optional[str] = None,
     active_only: bool = False,
     days: Optional[int] = None,
-    limit: int = 50
+    limit: int = 50,
 ):
     """Get outage events with optional filtering."""
     database = get_db()
@@ -193,7 +188,7 @@ async def get_outage_events(
         host_address=host_address,
         start_time=start_time,
         active_only=active_only,
-        limit=limit
+        limit=limit,
     )
     return [OutageEventResponse.from_orm(e) for e in events]
 
@@ -207,10 +202,7 @@ async def get_active_outages():
 
 
 @app.get("/api/outages/statistics/{host_address}", response_model=OutageStatistics)
-async def get_outage_statistics(
-    host_address: str,
-    days: Optional[int] = None
-):
+async def get_outage_statistics(host_address: str, days: Optional[int] = None):
     """Get outage statistics for a specific host."""
     database = get_db()
 
@@ -257,7 +249,9 @@ async def health_check():
 frontend_dist = Path(__file__).parent / "frontend" / "dist"
 if frontend_dist.exists():
     # Mount static assets (js, css, etc)
-    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
+    app.mount(
+        "/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets"
+    )
 
     # Catch-all route for Vue.js SPA routing
     # This must be the LAST route defined
@@ -273,9 +267,13 @@ if frontend_dist.exists():
         if index_file.exists():
             return FileResponse(index_file)
 
-        raise HTTPException(status_code=404, detail="Frontend not built. Run: cd frontend && npm run build")
+        raise HTTPException(
+            status_code=404,
+            detail="Frontend not built. Run: cd frontend && npm run build",
+        )
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

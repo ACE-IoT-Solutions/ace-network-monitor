@@ -8,7 +8,6 @@ import os
 import sqlite3
 import tempfile
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Generator, List
 from unittest.mock import MagicMock, Mock
 
@@ -185,9 +184,7 @@ def temp_config_file() -> Generator[str, None, None]:
         },
     }
 
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".yaml", delete=False
-    ) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(config, f)
         config_path = f.name
 
@@ -214,9 +211,7 @@ def invalid_config_file() -> Generator[str, None, None]:
         "interval_seconds": 0,  # Invalid: zero interval
     }
 
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".yaml", delete=False
-    ) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(config, f)
         config_path = f.name
 

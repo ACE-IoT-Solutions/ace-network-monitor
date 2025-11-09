@@ -13,7 +13,7 @@ Tests cover:
 import pytest
 import sqlite3
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 
 @pytest.mark.integration
@@ -29,22 +29,25 @@ class TestEndToEndWorkflows:
         timestamp = datetime.now()
 
         # Store result in database
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            host,
-            timestamp,
-            mock_ping_response.packets_sent,
-            mock_ping_response.packets_received,
-            mock_ping_response.packets_sent - mock_ping_response.packets_received,
-            (1 - mock_ping_response.packet_loss / 100) * 100,
-            mock_ping_response.rtt_min,
-            mock_ping_response.rtt_max,
-            mock_ping_response.rtt_avg
-        ))
+        """,
+            (
+                host,
+                timestamp,
+                mock_ping_response.packets_sent,
+                mock_ping_response.packets_received,
+                mock_ping_response.packets_sent - mock_ping_response.packets_received,
+                (1 - mock_ping_response.packet_loss / 100) * 100,
+                mock_ping_response.rtt_min,
+                mock_ping_response.rtt_max,
+                mock_ping_response.rtt_avg,
+            ),
+        )
 
         db_connection.commit()
 
@@ -63,17 +66,25 @@ class TestEndToEndWorkflows:
         timestamp = datetime.now()
 
         for host in hosts:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                host, timestamp, 10, 10, 0, 100.0,
-                mock_ping_response.rtt_min,
-                mock_ping_response.rtt_max,
-                mock_ping_response.rtt_avg
-            ))
+            """,
+                (
+                    host,
+                    timestamp,
+                    10,
+                    10,
+                    0,
+                    100.0,
+                    mock_ping_response.rtt_min,
+                    mock_ping_response.rtt_max,
+                    mock_ping_response.rtt_avg,
+                ),
+            )
 
         db_connection.commit()
 
@@ -92,18 +103,25 @@ class TestEndToEndWorkflows:
         timestamp = datetime.now()
 
         # Store failed ping result
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            host, timestamp,
-            mock_failed_ping_response.packets_sent,
-            mock_failed_ping_response.packets_received,
-            mock_failed_ping_response.packets_sent,
-            0.0, None, None, None
-        ))
+        """,
+            (
+                host,
+                timestamp,
+                mock_failed_ping_response.packets_sent,
+                mock_failed_ping_response.packets_received,
+                mock_failed_ping_response.packets_sent,
+                0.0,
+                None,
+                None,
+                None,
+            ),
+        )
 
         db_connection.commit()
 
@@ -157,9 +175,12 @@ class TestEndToEndWorkflows:
         read_cursor = read_conn.cursor()
 
         # Write data
-        write_cursor.execute("""
+        write_cursor.execute(
+            """
             INSERT INTO ping_results (host, timestamp) VALUES (?, ?)
-        """, ("8.8.8.8", datetime.now()))
+        """,
+            ("8.8.8.8", datetime.now()),
+        )
         write_conn.commit()
 
         # Read data from separate connection
@@ -197,32 +218,47 @@ class TestEndToEndWorkflows:
 
         # Add mix of old and new data
         for days_ago in [0, 5, 50, 100, 200]:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                "8.8.8.8",
-                datetime.now() - timedelta(days=days_ago),
-                10, 10, 0, 100.0, 10.0, 20.0, 15.0
-            ))
+            """,
+                (
+                    "8.8.8.8",
+                    datetime.now() - timedelta(days=days_ago),
+                    10,
+                    10,
+                    0,
+                    100.0,
+                    10.0,
+                    20.0,
+                    15.0,
+                ),
+            )
 
         db_connection.commit()
 
         # Run cleanup
         cutoff_date = datetime.now() - timedelta(days=90)
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM ping_results WHERE timestamp < ?
-        """, (cutoff_date,))
+        """,
+            (cutoff_date,),
+        )
 
         db_connection.commit()
 
         # Verify recent data remains
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) FROM ping_results
             WHERE timestamp >= ?
-        """, (cutoff_date,))
+        """,
+            (cutoff_date,),
+        )
 
         recent_count = cursor.fetchone()[0]
         assert recent_count > 0
@@ -245,13 +281,14 @@ class TestEdgeCasesAndFailureModes:
         for host in invalid_hosts:
             # System should validate and reject
             import re
-            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+
+            ip_pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
             # Updated pattern to reject consecutive dots, starting/ending dots, and invalid characters
-            domain_pattern = r'^(?!.*\.\.)[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$|^localhost$'
+            domain_pattern = r"^(?!.*\.\.)[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$|^localhost$"
 
             is_valid = False
             if host and re.match(ip_pattern, host):
-                parts = [int(p) for p in host.split('.')]
+                parts = [int(p) for p in host.split(".")]
                 is_valid = all(0 <= p <= 255 for p in parts)
             elif host and re.match(domain_pattern, host):
                 is_valid = True
@@ -266,11 +303,10 @@ class TestEdgeCasesAndFailureModes:
 
     def test_network_timeout_handling(self):
         """Test handling of network timeouts."""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             import subprocess
-            mock_run.side_effect = subprocess.TimeoutExpired(
-                cmd='ping', timeout=5
-            )
+
+            mock_run.side_effect = subprocess.TimeoutExpired(cmd="ping", timeout=5)
 
             # System should catch and handle timeout
             with pytest.raises(subprocess.TimeoutExpired):
@@ -278,7 +314,7 @@ class TestEdgeCasesAndFailureModes:
 
     def test_ping_permission_denied(self):
         """Test handling when ping permission is denied."""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.side_effect = PermissionError("Operation not permitted")
 
             with pytest.raises(PermissionError):
@@ -336,12 +372,12 @@ class TestEdgeCasesAndFailureModes:
     def test_partial_packet_loss_edge_cases(self):
         """Test edge cases in packet loss calculation."""
         test_cases = [
-            (10, 0),   # 100% loss
+            (10, 0),  # 100% loss
             (10, 10),  # 0% loss
-            (10, 1),   # 90% loss
-            (10, 9),   # 10% loss
-            (1, 1),    # Single packet success
-            (1, 0),    # Single packet loss
+            (10, 1),  # 90% loss
+            (10, 9),  # 10% loss
+            (1, 1),  # Single packet success
+            (1, 0),  # Single packet loss
         ]
 
         for sent, received in test_cases:
@@ -369,7 +405,7 @@ class TestEdgeCasesAndFailureModes:
         cursor.execute("PRAGMA integrity_check")
         result = cursor.fetchone()
 
-        assert result[0] == 'ok'
+        assert result[0] == "ok"
         conn.close()
 
     def test_very_long_host_name(self):
@@ -383,8 +419,8 @@ class TestEdgeCasesAndFailureModes:
         """Test handling of unicode characters in host names."""
         unicode_hosts = [
             "münchen.de",  # German
-            "日本.jp",      # Japanese
-            "café.fr",     # French
+            "日本.jp",  # Japanese
+            "café.fr",  # French
         ]
 
         # System should handle IDN (Internationalized Domain Names)
@@ -414,18 +450,29 @@ class TestEdgeCasesAndFailureModes:
         # Insert simulated data
         records = []
         for i in range(total_checks):
-            records.append((
-                "8.8.8.8",
-                datetime.now() - timedelta(minutes=total_checks - i),
-                10, 10, 0, 100.0, 10.0, 20.0, 15.0
-            ))
+            records.append(
+                (
+                    "8.8.8.8",
+                    datetime.now() - timedelta(minutes=total_checks - i),
+                    10,
+                    10,
+                    0,
+                    100.0,
+                    10.0,
+                    20.0,
+                    15.0,
+                )
+            )
 
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, records)
+        """,
+            records,
+        )
 
         db_connection.commit()
 
@@ -448,21 +495,21 @@ class TestEdgeCasesAndFailureModes:
         import yaml
 
         # Read original config
-        with open(temp_config_file, 'r') as f:
+        with open(temp_config_file, "r") as f:
             original_config = yaml.safe_load(f)
 
         # Modify config
         modified_config = original_config.copy()
-        modified_config['interval_seconds'] = 120
+        modified_config["interval_seconds"] = 120
 
-        with open(temp_config_file, 'w') as f:
+        with open(temp_config_file, "w") as f:
             yaml.dump(modified_config, f)
 
         # Reload config
-        with open(temp_config_file, 'r') as f:
+        with open(temp_config_file, "r") as f:
             reloaded_config = yaml.safe_load(f)
 
-        assert reloaded_config['interval_seconds'] == 120
+        assert reloaded_config["interval_seconds"] == 120
 
     def test_memory_leak_prevention(self, db_connection):
         """Test that database operations don't leak memory."""
@@ -470,12 +517,15 @@ class TestEdgeCasesAndFailureModes:
 
         # Perform many operations
         for i in range(1000):
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0))
+            """,
+                ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0),
+            )
 
             if i % 100 == 0:
                 db_connection.commit()

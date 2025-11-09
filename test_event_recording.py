@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Test script to validate outage event recording."""
 
-import time
 from datetime import datetime
 from config import Config
 from database import Database
 from monitor import PingMonitor
+
 
 def main():
     """Test outage event recording with various scenarios."""
@@ -38,18 +38,24 @@ def main():
             duration = (datetime.now() - active.start_time).total_seconds()
             print(f"   🔴 ACTIVE OUTAGE: {result.host_name} ({result.host_address})")
             print(f"      Started: {active.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            print(f"      Duration: {int(duration)}s ({active.checks_failed} failed checks)")
+            print(
+                f"      Duration: {int(duration)}s ({active.checks_failed} failed checks)"
+            )
         else:
             if result.success_rate == 0.0:
-                print(f"   ⚠️  DOWN but no event: {result.host_name} ({result.host_address})")
+                print(
+                    f"   ⚠️  DOWN but no event: {result.host_name} ({result.host_address})"
+                )
             else:
-                print(f"   ✅ UP: {result.host_name} ({result.host_address}) - {result.success_rate:.1f}%")
+                print(
+                    f"   ✅ UP: {result.host_name} ({result.host_address}) - {result.success_rate:.1f}%"
+                )
     print()
 
     # Test 2: Perform a fresh check to see event creation/update
     print("🔄 Test 2: Perform Fresh Check (watch for event creation/updates)")
     print("-" * 80)
-    results = monitor.check_all_hosts()
+    monitor.check_all_hosts()
     print()
 
     # Test 3: Show all events in database
@@ -62,7 +68,11 @@ def main():
     else:
         for event in all_events:
             status = "🔴 ACTIVE" if event.end_time is None else "🟢 RESOLVED"
-            duration = "ongoing" if event.duration_seconds is None else f"{event.duration_seconds}s"
+            duration = (
+                "ongoing"
+                if event.duration_seconds is None
+                else f"{event.duration_seconds}s"
+            )
 
             print(f"   {status} Event #{event.id}")
             print(f"      Host: {event.host_name} ({event.host_address})")
@@ -70,7 +80,9 @@ def main():
             if event.end_time:
                 print(f"      End: {event.end_time.strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"      Duration: {duration}")
-            print(f"      Failed checks: {event.checks_failed}/{event.checks_during_outage}")
+            print(
+                f"      Failed checks: {event.checks_failed}/{event.checks_during_outage}"
+            )
             print()
 
     # Test 4: Event statistics
@@ -84,12 +96,12 @@ def main():
         print(f"      Total outages: {stats['total_outages']}")
         print(f"      Active outages: {stats['active_outages']}")
 
-        if stats['avg_duration_seconds'] > 0:
-            avg_min = stats['avg_duration_seconds'] / 60
+        if stats["avg_duration_seconds"] > 0:
+            avg_min = stats["avg_duration_seconds"] / 60
             print(f"      Average duration: {avg_min:.1f} minutes")
 
-        if stats['total_downtime_seconds'] > 0:
-            total_min = stats['total_downtime_seconds'] / 60
+        if stats["total_downtime_seconds"] > 0:
+            total_min = stats["total_downtime_seconds"] / 60
             print(f"      Total downtime: {total_min:.1f} minutes")
         print()
 
@@ -137,8 +149,11 @@ def main():
     print("=" * 80)
     print()
     print("💡 Tip: Run 'uv run python main.py events' to see formatted event log")
-    print("💡 Tip: Use 'uv run python main.py events --active' to see only ongoing outages")
+    print(
+        "💡 Tip: Use 'uv run python main.py events --active' to see only ongoing outages"
+    )
     print()
+
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,6 @@ This script generates sample monitoring data and demonstrates usage.
 """
 
 import time
-from datetime import datetime
 
 from config import Config
 from database import Database

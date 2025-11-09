@@ -42,9 +42,17 @@ class TestDatabaseOperations:
         columns = {row[1] for row in cursor.fetchall()}
 
         expected_columns = {
-            'id', 'host', 'timestamp', 'ping_count',
-            'success_count', 'failure_count', 'success_rate',
-            'min_latency', 'max_latency', 'avg_latency', 'created_at'
+            "id",
+            "host",
+            "timestamp",
+            "ping_count",
+            "success_count",
+            "failure_count",
+            "success_rate",
+            "min_latency",
+            "max_latency",
+            "avg_latency",
+            "created_at",
         }
         assert expected_columns.issubset(columns)
 
@@ -52,22 +60,15 @@ class TestDatabaseOperations:
         """Test inserting a ping result into database."""
         cursor = db_connection.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            "8.8.8.8",
-            datetime.now(),
-            10,
-            10,
-            0,
-            100.0,
-            10.5,
-            15.2,
-            12.3
-        ))
+        """,
+            ("8.8.8.8", datetime.now(), 10, 10, 0, 100.0, 10.5, 15.2, 12.3),
+        )
 
         db_connection.commit()
 
@@ -79,9 +80,12 @@ class TestDatabaseOperations:
         """Test querying results by host."""
         cursor = populated_db.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM ping_results WHERE host = ?
-        """, ("8.8.8.8",))
+        """,
+            ("8.8.8.8",),
+        )
 
         results = cursor.fetchall()
         assert len(results) >= 1
@@ -93,10 +97,13 @@ class TestDatabaseOperations:
         start_time = datetime.now() - timedelta(hours=1)
         end_time = datetime.now()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM ping_results
             WHERE timestamp BETWEEN ? AND ?
-        """, (start_time, end_time))
+        """,
+            (start_time, end_time),
+        )
 
         results = cursor.fetchall()
         assert len(results) >= 0
@@ -111,18 +118,24 @@ class TestDatabaseOperations:
 
         # Update it
         new_latency = 99.9
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE ping_results
             SET avg_latency = ?
             WHERE id = ?
-        """, (new_latency, record_id))
+        """,
+            (new_latency, record_id),
+        )
 
         populated_db.commit()
 
         # Verify update
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT avg_latency FROM ping_results WHERE id = ?
-        """, (record_id,))
+        """,
+            (record_id,),
+        )
 
         assert cursor.fetchone()[0] == new_latency
 
@@ -132,31 +145,37 @@ class TestDatabaseOperations:
 
         # Insert old data
         for record in old_ping_data:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                record["host"],
-                record["timestamp"],
-                record["ping_count"],
-                record["success_count"],
-                record["failure_count"],
-                record["success_rate"],
-                record["min_latency"],
-                record["max_latency"],
-                record["avg_latency"],
-            ))
+            """,
+                (
+                    record["host"],
+                    record["timestamp"],
+                    record["ping_count"],
+                    record["success_count"],
+                    record["failure_count"],
+                    record["success_rate"],
+                    record["min_latency"],
+                    record["max_latency"],
+                    record["avg_latency"],
+                ),
+            )
 
         db_connection.commit()
 
         # Delete records older than 90 days
         cutoff_date = datetime.now() - timedelta(days=90)
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM ping_results
             WHERE timestamp < ?
-        """, (cutoff_date,))
+        """,
+            (cutoff_date,),
+        )
 
         deleted_count = cursor.rowcount
         db_connection.commit()
@@ -175,14 +194,15 @@ class TestDatabaseOperations:
         indexes = {row[0] for row in cursor.fetchall()}
 
         # Check for expected indexes
-        assert any('idx_host_timestamp' in idx for idx in indexes)
-        assert any('idx_timestamp' in idx for idx in indexes)
+        assert any("idx_host_timestamp" in idx for idx in indexes)
+        assert any("idx_timestamp" in idx for idx in indexes)
 
     def test_query_statistics_by_host(self, populated_db):
         """Test calculating statistics for a specific host."""
         cursor = populated_db.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 COUNT(*) as total_pings,
                 AVG(success_rate) as avg_success_rate,
@@ -192,7 +212,9 @@ class TestDatabaseOperations:
             FROM ping_results
             WHERE host = ?
             AND avg_latency IS NOT NULL
-        """, ("8.8.8.8",))
+        """,
+            ("8.8.8.8",),
+        )
 
         result = cursor.fetchone()
         assert result is not None
@@ -204,11 +226,14 @@ class TestDatabaseOperations:
 
         # Test NOT NULL constraint
         with pytest.raises(sqlite3.IntegrityError):
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (timestamp, ping_count, success_count, failure_count, success_rate)
                 VALUES (?, ?, ?, ?, ?)
-            """, (datetime.now(), 10, 10, 0, 100.0))
+            """,
+                (datetime.now(), 10, 10, 0, 100.0),
+            )
 
     def test_transaction_rollback(self, populated_db):
         """Test transaction rollback functionality."""
@@ -219,12 +244,15 @@ class TestDatabaseOperations:
         initial_count = cursor.fetchone()[0]
 
         # Start transaction
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0))
+        """,
+            ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0),
+        )
 
         # Rollback
         populated_db.rollback()
@@ -237,12 +265,15 @@ class TestDatabaseOperations:
         """Test transaction commit functionality."""
         cursor = db_connection.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0))
+        """,
+            ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0),
+        )
 
         db_connection.commit()
 
@@ -255,24 +286,29 @@ class TestDatabaseOperations:
         records = []
 
         for i in range(100):
-            records.append((
-                f"host{i % 10}.com",
-                datetime.now() - timedelta(minutes=i),
-                10,
-                10,
-                0,
-                100.0,
-                10.0,
-                20.0,
-                15.0
-            ))
+            records.append(
+                (
+                    f"host{i % 10}.com",
+                    datetime.now() - timedelta(minutes=i),
+                    10,
+                    10,
+                    0,
+                    100.0,
+                    10.0,
+                    20.0,
+                    15.0,
+                )
+            )
 
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, records)
+        """,
+            records,
+        )
 
         db_connection.commit()
 
@@ -317,12 +353,15 @@ class TestDatabaseOperations:
 
         # Insert data
         for i in range(1000):
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0))
+            """,
+                ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0),
+            )
 
         db_connection.commit()
 
@@ -339,20 +378,26 @@ class TestDatabaseOperations:
         """Test handling of NULL latency values for failed pings."""
         cursor = db_connection.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ping_results
             (host, timestamp, ping_count, success_count, failure_count,
              success_rate, min_latency, max_latency, avg_latency)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, ("unreachable.host", datetime.now(), 10, 0, 10, 0.0, None, None, None))
+        """,
+            ("unreachable.host", datetime.now(), 10, 0, 10, 0.0, None, None, None),
+        )
 
         db_connection.commit()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT min_latency, max_latency, avg_latency
             FROM ping_results
             WHERE host = ?
-        """, ("unreachable.host",))
+        """,
+            ("unreachable.host",),
+        )
 
         result = cursor.fetchone()
         assert result[0] is None
@@ -360,30 +405,44 @@ class TestDatabaseOperations:
         assert result[2] is None
 
     @pytest.mark.parametrize("retention_days", [1, 7, 30, 90, 365])
-    def test_cleanup_with_various_retention_periods(self, db_connection, retention_days):
+    def test_cleanup_with_various_retention_periods(
+        self, db_connection, retention_days
+    ):
         """Test cleanup job with different retention periods."""
         cursor = db_connection.cursor()
 
         # Insert data with various ages
         for days_ago in [0, 10, 50, 100, 200]:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO ping_results
                 (host, timestamp, ping_count, success_count, failure_count,
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                "test.com",
-                datetime.now() - timedelta(days=days_ago),
-                10, 10, 0, 100.0, 10.0, 20.0, 15.0
-            ))
+            """,
+                (
+                    "test.com",
+                    datetime.now() - timedelta(days=days_ago),
+                    10,
+                    10,
+                    0,
+                    100.0,
+                    10.0,
+                    20.0,
+                    15.0,
+                ),
+            )
 
         db_connection.commit()
 
         # Delete old records
         cutoff_date = datetime.now() - timedelta(days=retention_days)
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM ping_results WHERE timestamp < ?
-        """, (cutoff_date,))
+        """,
+            (cutoff_date,),
+        )
 
         deleted = cursor.rowcount
         db_connection.commit()
@@ -401,6 +460,7 @@ class TestDatabaseOperations:
 
         # Verify backup exists
         import os
+
         assert os.path.exists(backup_path)
 
         # Cleanup
@@ -411,11 +471,14 @@ class TestDatabaseOperations:
         cursor = populated_db.cursor()
 
         # Explain query plan
-        cursor.execute("""
+        cursor.execute(
+            """
             EXPLAIN QUERY PLAN
             SELECT * FROM ping_results
             WHERE host = ? AND timestamp > ?
-        """, ("8.8.8.8", datetime.now() - timedelta(days=1)))
+        """,
+            ("8.8.8.8", datetime.now() - timedelta(days=1)),
+        )
 
         plan = cursor.fetchall()
         # Plan should mention index usage
