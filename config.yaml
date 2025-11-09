@@ -13,5 +13,5 @@ database:
   path: connection_logs.db
   retention_days: 90
 dashboard:
-  port: 8501
+  port: 8506
   host: localhost

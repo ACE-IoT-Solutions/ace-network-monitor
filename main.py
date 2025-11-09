@@ -2,8 +2,11 @@
 
 import subprocess
 import sys
+import threading
+import time
 
 import click
+import uvicorn
 
 from cleanup import CleanupJob
 from config import Config
@@ -12,9 +15,9 @@ from monitor import PingMonitor
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.2.0")
 def cli():
-    """Network Connectivity Monitor - Track network reliability with ping statistics."""
+    """Network Connectivity Monitor - Track network reliability with ping statistics, outage events, and real-time dashboard."""
     pass
 
 
@@ -28,26 +31,29 @@ def cli():
 @click.option(
     "--dashboard/--no-dashboard",
     default=True,
-    help="Launch dashboard alongside monitoring (default: enabled)",
+    help="Launch API server alongside monitoring (default: enabled)",
 )
 @click.option(
-    "--dashboard-port",
+    "--api-port",
     type=int,
-    help="Port to run dashboard on (overrides config)",
+    help="Port to run API server on (overrides config)",
 )
 @click.option(
-    "--dashboard-host",
+    "--api-host",
     type=str,
-    help="Host to run dashboard on (overrides config)",
+    help="Host to run API server on (overrides config)",
 )
-def monitor(config, dashboard, dashboard_port, dashboard_host):
+def monitor(config, dashboard, api_port, api_host):
     """Start continuous monitoring of configured hosts.
 
-    By default, launches the dashboard alongside monitoring in an integrated mode.
-    Use --no-dashboard to run monitoring only without the dashboard.
+    By default, launches the API server alongside monitoring in an integrated mode.
+    Use --no-dashboard to run monitoring only without the API server.
+
+    If frontend/dist/ exists (built with 'npm run build'), the dashboard is served at the root.
+    Otherwise, run 'cd frontend && npm run dev' in a separate terminal for development.
     """
-    import threading
-    import time
+    import os
+    from pathlib import Path
 
     cfg = Config(config)
     db = Database(cfg.database_path)
@@ -65,27 +71,37 @@ def monitor(config, dashboard, dashboard_port, dashboard_host):
         # Give monitoring a moment to start and do initial check
         time.sleep(2)
 
-        # Launch dashboard in main thread (Streamlit expects this)
-        dashboard_port_val = dashboard_port if dashboard_port else cfg.dashboard_port
-        dashboard_host_val = dashboard_host if dashboard_host else cfg.dashboard_host
+        # Launch API server in main thread
+        api_port_val = api_port if api_port else cfg.dashboard_port
+        api_host_val = api_host if api_host else cfg.dashboard_host
 
-        cmd = [
-            "streamlit",
-            "run",
-            "dashboard.py",
-            "--server.port",
-            str(dashboard_port_val),
-            "--server.address",
-            dashboard_host_val,
-        ]
+        # Check if frontend is built
+        frontend_dist = Path("frontend/dist")
+        frontend_built = frontend_dist.exists() and (frontend_dist / "index.html").exists()
 
-        click.echo(f"Starting integrated monitoring + dashboard on {dashboard_host_val}:{dashboard_port_val}...")
-        click.echo("Press Ctrl+C to stop both monitoring and dashboard")
+        click.echo(f"Starting integrated monitoring + API server on {api_host_val}:{api_port_val}...")
+        click.echo(f"API documentation available at http://{api_host_val}:{api_port_val}/docs")
+
+        if frontend_built:
+            click.echo(f"Dashboard available at http://{api_host_val}:{api_port_val}/")
+            click.echo("(Frontend is built and integrated)")
+        else:
+            click.echo("Frontend not built. For development, run in separate terminal:")
+            click.echo("  cd frontend && npm run dev")
+            click.echo("Or build for production:")
+            click.echo("  cd frontend && npm run build")
+
+        click.echo("Press Ctrl+C to stop both monitoring and API server")
 
         try:
-            subprocess.run(cmd)
+            uvicorn.run(
+                "api:app",
+                host=api_host_val,
+                port=api_port_val,
+                log_level="info"
+            )
         except KeyboardInterrupt:
-            click.echo("\nMonitoring and dashboard stopped")
+            click.echo("\nMonitoring and API server stopped")
     else:
         # Run monitoring only (original behavior)
         mon.run_continuous()
@@ -130,40 +146,43 @@ def check(config):
     "--port",
     "-p",
     type=int,
-    help="Port to run dashboard on (overrides config)",
+    help="Port to run API server on (overrides config)",
 )
 @click.option(
     "--host",
     "-h",
     type=str,
-    help="Host to run dashboard on (overrides config)",
+    help="Host to run API server on (overrides config)",
 )
-def dashboard(config, port, host):
-    """Launch the Streamlit dashboard."""
+def api(config, port, host):
+    """Launch the FastAPI server (API only, no monitoring).
+
+    This starts only the API server without monitoring.
+    Run monitoring separately with 'python main.py monitor --no-dashboard'
+    or use 'python main.py monitor' for integrated mode.
+
+    If frontend/dist/ exists (built with 'npm run build'), the dashboard is served at the root.
+    Otherwise, run 'cd frontend && npm run dev' in a separate terminal for development.
+    """
     cfg = Config(config)
 
     # Use command line options if provided, otherwise use config
-    dashboard_port = port if port else cfg.dashboard_port
-    dashboard_host = host if host else cfg.dashboard_host
+    api_port = port if port else cfg.dashboard_port
+    api_host = host if host else cfg.dashboard_host
 
-    # Build streamlit command
-    cmd = [
-        "streamlit",
-        "run",
-        "dashboard.py",
-        "--server.port",
-        str(dashboard_port),
-        "--server.address",
-        dashboard_host,
-    ]
-
-    click.echo(f"Starting dashboard on {dashboard_host}:{dashboard_port}...")
+    click.echo(f"Starting API server on {api_host}:{api_port}...")
+    click.echo(f"API documentation: http://{api_host}:{api_port}/docs")
     click.echo("Press Ctrl+C to stop")
 
     try:
-        subprocess.run(cmd)
+        uvicorn.run(
+            "api:app",
+            host=api_host,
+            port=api_port,
+            log_level="info"
+        )
     except KeyboardInterrupt:
-        click.echo("\nDashboard stopped")
+        click.echo("\nAPI server stopped")
 
 
 @cli.command()

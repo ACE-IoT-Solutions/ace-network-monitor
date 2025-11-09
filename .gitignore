@@ -16,8 +16,17 @@ wheels/
 # Local configuration overrides
 config.local.yaml
 
-# Streamlit cache
+# Streamlit cache (deprecated)
 .streamlit/
+dashboard.py.deprecated
+
+# Frontend (Vue.js)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.env.local
+frontend/.env.*.local
 
 # Tool directories
 .claude-flow/

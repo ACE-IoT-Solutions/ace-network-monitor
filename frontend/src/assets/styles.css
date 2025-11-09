@@ -1,0 +1,69 @@
+/* ACE IoT Solutions Brand Colors */
+:root {
+  /* Primary Brand Color */
+  --ace-lime: #c0d201;
+  --ace-lime-dark: #9fae01;
+  --ace-lime-light: #d4e235;
+
+  /* Neutrals */
+  --ace-gray-900: #1a1a1a;
+  --ace-gray-800: #2d2d2d;
+  --ace-gray-700: #404040;
+  --ace-gray-600: #666666;
+  --ace-gray-500: #808080;
+  --ace-gray-400: #999999;
+  --ace-gray-300: #cccccc;
+  --ace-gray-200: #e5e5e5;
+  --ace-gray-100: #f5f5f5;
+
+  /* Status Colors */
+  --ace-success: #10b981;
+  --ace-warning: #f59e0b;
+  --ace-danger: #ef4444;
+  --ace-info: #3b82f6;
+
+  /* Chart Colors */
+  --ace-chart-primary: #c0d201;
+  --ace-chart-secondary: #10b981;
+  --ace-chart-tertiary: #3b82f6;
+  --ace-chart-quaternary: #f59e0b;
+  --ace-chart-danger: #ef4444;
+
+  /* Backgrounds */
+  --ace-bg-primary: #ffffff;
+  --ace-bg-secondary: #f5f5f5;
+  --ace-bg-dark: #1a1a1a;
+
+  /* Text */
+  --ace-text-primary: #1a1a1a;
+  --ace-text-secondary: #666666;
+  --ace-text-light: #ffffff;
+}
+
+/* Global Resets */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--ace-bg-secondary);
+  color: var(--ace-text-primary);
+  line-height: 1.6;
+}
+
+/* Utility Classes */
+.ace-text-lime { color: var(--ace-lime); }
+.ace-bg-lime { background-color: var(--ace-lime); }
+.ace-border-lime { border-color: var(--ace-lime); }
+
+.ace-text-success { color: var(--ace-success); }
+.ace-bg-success { background-color: var(--ace-success); }
+
+.ace-text-warning { color: var(--ace-warning); }
+.ace-bg-warning { background-color: var(--ace-warning); }
+
+.ace-text-danger { color: var(--ace-danger); }
+.ace-bg-danger { background-color: var(--ace-danger); }

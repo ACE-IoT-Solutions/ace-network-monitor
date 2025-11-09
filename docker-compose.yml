@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ace-connection-logger:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ace-connection-logger
+    ports:
+      - "8506:8506"
+    volumes:
+      # Persist database
+      - ./data:/data
+      # Mount custom config (optional)
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8506
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8506/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
