@@ -78,7 +78,7 @@ jobs:
       (github.event_name == 'release' && contains(github.event.release.tag_name, '-test'))
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/ace-connection-logger
+      url: https://test.pypi.org/p/ace-network-monitor
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
@@ -103,7 +103,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
     environment:
       name: pypi
-      url: https://pypi.org/p/ace-connection-logger
+      url: https://pypi.org/p/ace-network-monitor
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 

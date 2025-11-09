@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ace-connection-logger"
-version = "0.2.2"
+name = "ace-network-monitor"
+version = "0.3.0"
 description = "Network connectivity monitoring tool with ping statistics, outage tracking, FastAPI backend and Vue.js dashboard"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -36,13 +36,13 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ACE-IoT-Solutions/ace-connection-logger"
-Repository = "https://github.com/ACE-IoT-Solutions/ace-connection-logger"
-Documentation = "https://github.com/ACE-IoT-Solutions/ace-connection-logger#readme"
-Issues = "https://github.com/ACE-IoT-Solutions/ace-connection-logger/issues"
+Homepage = "https://github.com/ACE-IoT-Solutions/ace-network-monitor"
+Repository = "https://github.com/ACE-IoT-Solutions/ace-network-monitor"
+Documentation = "https://github.com/ACE-IoT-Solutions/ace-network-monitor#readme"
+Issues = "https://github.com/ACE-IoT-Solutions/ace-network-monitor/issues"
 
 [project.scripts]
-ace-connection-logger = "main:main"
+ace-network-monitor = "main:main"
 
 [dependency-groups]
 dev = [
