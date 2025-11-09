@@ -526,6 +526,71 @@ class Database:
                     ),
                 )
 
+    def close_outages_for_removed_hosts(
+        self, active_host_addresses: list[str]
+    ) -> int:
+        """Close any active outages for hosts not in the provided list.
+
+        This is useful when hosts are removed from the configuration to prevent
+        showing perpetual outages for hosts that are no longer monitored.
+
+        Args:
+            active_host_addresses: List of host addresses currently being monitored.
+
+        Returns:
+            Number of outages closed.
+        """
+        if not active_host_addresses:
+            # If no hosts provided, don't close anything to avoid accidents
+            return 0
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            # Find all active outages for hosts not in the active list
+            placeholders = ",".join("?" * len(active_host_addresses))
+            cursor.execute(
+                f"""
+                SELECT id, host_address, host_name, start_time
+                FROM outage_events
+                WHERE end_time IS NULL
+                AND host_address NOT IN ({placeholders})
+                """,
+                active_host_addresses,
+            )
+            outages_to_close = cursor.fetchall()
+
+            # Close each outage
+            closed_count = 0
+            current_time = datetime.now()
+            for row in outages_to_close:
+                event_id = row["id"]
+                start_time = datetime.fromisoformat(row["start_time"])
+                duration = int((current_time - start_time).total_seconds())
+
+                cursor.execute(
+                    """
+                    UPDATE outage_events
+                    SET end_time = ?,
+                        duration_seconds = ?,
+                        event_type = 'outage_end',
+                        notes = COALESCE(notes, '') || ?
+                    WHERE id = ?
+                    """,
+                    (
+                        current_time,
+                        duration,
+                        "\nHost removed from monitoring configuration",
+                        event_id,
+                    ),
+                )
+                closed_count += 1
+                print(
+                    f"  Closed outage for removed host {row['host_name']} ({row['host_address']})"
+                )
+
+            return closed_count
+
     def get_outage_events(
         self,
         host_address: Optional[str] = None,

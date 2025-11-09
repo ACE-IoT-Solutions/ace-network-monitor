@@ -258,6 +258,10 @@ class PingMonitor:
         """
         results = []
 
+        # Close any active outages for hosts that are no longer in the config
+        active_addresses = [host["address"] for host in self.config.hosts]
+        self.database.close_outages_for_removed_hosts(active_addresses)
+
         for host in self.config.hosts:
             host_name = host["name"]
             host_address = host["address"]
