@@ -11,7 +11,7 @@ Tests cover:
 
 import pytest
 from datetime import datetime, timedelta
-from database import Database, OutageEvent
+from database import Database
 
 
 @pytest.fixture

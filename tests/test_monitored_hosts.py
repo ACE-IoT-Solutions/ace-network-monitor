@@ -96,7 +96,17 @@ class TestMonitoredHosts:
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                ("Old Name", "8.8.8.8", now - timedelta(days=1), 10, 0, 100.0, 10.5, 15.2, 12.3),
+                (
+                    "Old Name",
+                    "8.8.8.8",
+                    now - timedelta(days=1),
+                    10,
+                    0,
+                    100.0,
+                    10.5,
+                    15.2,
+                    12.3,
+                ),
             )
 
             # New name (more recent)
@@ -161,7 +171,17 @@ class TestMonitoredHosts:
                  success_rate, min_latency, max_latency, avg_latency)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                ("Old Server", "192.168.1.100", now - timedelta(days=30), 10, 0, 100.0, 10.5, 15.2, 12.3),
+                (
+                    "Old Server",
+                    "192.168.1.100",
+                    now - timedelta(days=30),
+                    10,
+                    0,
+                    100.0,
+                    10.5,
+                    15.2,
+                    12.3,
+                ),
             )
 
         hosts = db.get_all_monitored_hosts()

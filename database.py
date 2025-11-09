@@ -553,9 +553,7 @@ class Database:
                     ),
                 )
 
-    def close_outages_for_removed_hosts(
-        self, active_host_addresses: list[str]
-    ) -> int:
+    def close_outages_for_removed_hosts(self, active_host_addresses: list[str]) -> int:
         """Close any active outages for hosts not in the provided list.
 
         This is useful when hosts are removed from the configuration to prevent
