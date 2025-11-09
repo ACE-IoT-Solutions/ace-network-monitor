@@ -216,9 +216,21 @@ async def get_outage_statistics(host_address: str, days: Optional[int] = None):
 
 @app.get("/api/hosts")
 async def get_hosts():
-    """Get list of all monitored hosts."""
+    """Get list of currently configured hosts."""
     cfg = get_config()
     return [HostInfo(name=h["name"], address=h["address"]) for h in cfg.hosts]
+
+
+@app.get("/api/hosts/all")
+async def get_all_monitored_hosts():
+    """Get list of all hosts that have been monitored (current + historical).
+
+    This includes hosts that may have been removed from the configuration
+    but still have historical data in the database.
+    """
+    database = get_db()
+    hosts = database.get_all_monitored_hosts()
+    return [HostInfo(name=h["name"], address=h["address"]) for h in hosts]
 
 
 @app.get("/api/hosts/{host_address}/active-outage")

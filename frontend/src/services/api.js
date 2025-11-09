@@ -66,6 +66,11 @@ export default {
     return response.data
   },
 
+  async getAllMonitoredHosts() {
+    const response = await api.get('/api/hosts/all')
+    return response.data
+  },
+
   async getHostActiveOutage(hostAddress) {
     const response = await api.get(`/api/hosts/${hostAddress}/active-outage`)
     return response.data

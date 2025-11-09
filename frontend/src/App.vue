@@ -121,23 +121,23 @@ export default {
         error.value = null
 
         // Load all data in parallel
-        const [status, latest, active, recent, hostList] = await Promise.all([
+        const [status, latest, active, recent, allHosts] = await Promise.all([
           api.getStatus(),
           api.getLatestResults(),
           api.getActiveOutages(),
           api.getOutageEvents(null, false, 7, 20),
-          api.getHosts()
+          api.getAllMonitoredHosts()  // Use all monitored hosts (current + historical)
         ])
 
         systemStatus.value = status
         latestResults.value = latest
         activeOutages.value = active
         recentOutages.value = recent
-        hosts.value = hostList
+        hosts.value = allHosts
 
         // Set default selected host
-        if (!selectedHost.value && hostList.length > 0) {
-          selectedHost.value = hostList[0].address
+        if (!selectedHost.value && allHosts.length > 0) {
+          selectedHost.value = allHosts[0].address
         }
       } catch (err) {
         error.value = 'Failed to load data: ' + err.message

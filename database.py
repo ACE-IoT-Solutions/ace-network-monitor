@@ -369,6 +369,33 @@ class Database:
 
         return [row["host_address"] for row in rows]
 
+    def get_all_monitored_hosts(self) -> List[dict[str, str]]:
+        """Get list of all hosts that have been monitored (have data in database).
+
+        Returns:
+            List of dicts with 'name' and 'address' keys for each unique host.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            # Get the most recent host_name for each host_address
+            cursor.execute(
+                """
+                SELECT pr1.host_name as name, pr1.host_address as address
+                FROM ping_results pr1
+                INNER JOIN (
+                    SELECT host_address, MAX(timestamp) as max_timestamp
+                    FROM ping_results
+                    GROUP BY host_address
+                ) pr2
+                ON pr1.host_address = pr2.host_address
+                AND pr1.timestamp = pr2.max_timestamp
+                ORDER BY pr1.host_name
+                """
+            )
+            rows = cursor.fetchall()
+
+        return [dict(row) for row in rows]
+
     def get_active_outage(self, host_address: str) -> Optional[OutageEvent]:
         """Get the current active outage for a host (if any).
 
