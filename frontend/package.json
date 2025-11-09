@@ -1,6 +1,6 @@
 {
-  "name": "ace-connection-logger-frontend",
-  "version": "0.2.0",
+  "name": "ace-network-monitor-frontend",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "vite",

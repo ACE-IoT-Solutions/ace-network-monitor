@@ -59,9 +59,17 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+artifacts = [
+    "frontend/dist/**/*",
+]
 exclude = [
     "tests",
-    "frontend",
+    "frontend/node_modules",
+    "frontend/src",
+    "frontend/public",
+    "frontend/*.json",
+    "frontend/*.js",
+    "frontend/*.config.*",
     ".github",
     ".git",
     ".venv",
@@ -72,8 +80,15 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.sdist]
+force-include = {"frontend/dist" = "frontend/dist"}
 exclude = [
     "tests",
+    "frontend/node_modules",
+    "frontend/src",
+    "frontend/public",
+    "frontend/*.json",
+    "frontend/*.js",
+    "frontend/*.config.*",
     ".github",
     ".git",
     ".venv",
