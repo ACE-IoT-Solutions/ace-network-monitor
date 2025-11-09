@@ -309,12 +309,11 @@ class TestDatabaseOperations:
         results = cursor.fetchall()
         assert len(results) > 0
 
-    def test_database_size_management(self, temp_db):
+    def test_database_size_management(self, db_connection):
         """Test database size monitoring."""
         import os
 
-        conn = sqlite3.connect(temp_db)
-        cursor = conn.cursor()
+        cursor = db_connection.cursor()
 
         # Insert data
         for i in range(1000):
@@ -325,16 +324,16 @@ class TestDatabaseOperations:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, ("test.com", datetime.now(), 10, 10, 0, 100.0, 10.0, 20.0, 15.0))
 
-        conn.commit()
+        db_connection.commit()
 
-        # Check database size
-        db_size = os.path.getsize(temp_db)
+        # Check database size - get path from connection
+        cursor.execute("PRAGMA database_list")
+        db_path = cursor.fetchone()[2]  # Get database file path
+        db_size = os.path.getsize(db_path)
         assert db_size > 0
 
         # Vacuum to reclaim space
         cursor.execute("VACUUM")
-
-        conn.close()
 
     def test_null_latency_handling(self, db_connection):
         """Test handling of NULL latency values for failed pings."""

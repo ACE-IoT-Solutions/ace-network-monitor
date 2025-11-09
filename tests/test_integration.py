@@ -246,7 +246,8 @@ class TestEdgeCasesAndFailureModes:
             # System should validate and reject
             import re
             ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
-            domain_pattern = r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^localhost$'
+            # Updated pattern to reject consecutive dots, starting/ending dots, and invalid characters
+            domain_pattern = r'^(?!.*\.\.)[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$|^localhost$'
 
             is_valid = False
             if host and re.match(ip_pattern, host):

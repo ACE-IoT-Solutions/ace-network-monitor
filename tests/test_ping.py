@@ -67,7 +67,8 @@ class TestPingFunctionality:
 
         # Simple validation pattern
         ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
-        domain_pattern = r'^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^localhost$'
+        # Updated pattern to reject consecutive dots, starting/ending dots, and invalid characters
+        domain_pattern = r'^(?!.*\.\.)[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$|^localhost$'
 
         if not host:
             is_valid = False
@@ -226,7 +227,9 @@ class TestPingFunctionality:
         for invalid in invalid_inputs:
             # Should raise appropriate error
             # This would test actual ping function error handling
-            assert invalid is not None or isinstance(invalid, str)
+            # Validate that these are all invalid inputs (not non-empty strings)
+            is_valid = isinstance(invalid, str) and len(invalid) > 0
+            assert not is_valid
 
     @pytest.mark.parametrize("network_condition", [
         "normal",
